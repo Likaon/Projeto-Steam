@@ -29,3 +29,13 @@ def fetch_featured():
 
     validate_envelope(envelope)
     return envelope
+
+
+##if __name__ == "__main__":
+##    result = fetch_featured()
+##    print("Envelope capturado:")
+##    print(result.keys())  # mostra as chaves principais
+##    print("Source:", result["source"])
+##    print("Endpoint:", result["endpoint"])
+##    print("Captured_at:", result["captured_at"])
+##    print("Data sample:", str(result["data"])[:200], "...")
