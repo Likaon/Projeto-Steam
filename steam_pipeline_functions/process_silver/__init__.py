@@ -56,17 +56,22 @@ def main(timer: func.TimerRequest) -> None:
     for bf in bronze_files:
         try:
             payload = _load_json(bf)
-            for envelope in payload.get("items", []):
-                normalized = parser.parse_featured(envelope.get("data", {}))
-                silver_items.append({
-                    "source": envelope.get("source", "steam"),
-                    "endpoint": envelope.get("endpoint", "featuredcategories"),
-                    "captured_at": envelope.get("captured_at", _now_iso()),
-                    "normalized_at": _now_iso(),
-                    "data": normalized,
-                })
+            
+            # CORREÇÃO: Assume que o payload é a resposta bruta da API (dicionário de categorias).
+            # Passamos o payload diretamente para o parser.
+            normalized = parser.parse_featured(payload) 
+
+            # Adiciona o envelope de metadados ao Silver
+            silver_items.append({
+                "source": "steam",
+                "endpoint": "featuredcategories",
+                "captured_at": _now_iso(), # Usamos o tempo atual
+                "normalized_at": _now_iso(),
+                "data": normalized,
+            })
+            
         except Exception as e:
-            print(f"[process_silver] error reading {bf}: {e}")
+            print(f"[process_silver] error reading or parsing {bf}: {e}")
 
     if silver_items:
         _save_silver(silver_items, tag="featured")

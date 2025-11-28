@@ -1,0 +1,46 @@
+{
+    "source": "steam",
+    "endpoint": "featuredcategories",
+    "captured_at": "2025-11-28T10:00:00+00:00",
+    "data": {
+        "featured_categories": [
+            {
+                "name": "Specials",
+                "items": [
+                    {
+                        "id": 12345,
+                        "type": 0,
+                        "name": "Game A",
+                        "discounted": true,
+                        "discount_percent": 50,
+                        "original_price": 4000,
+                        "final_price": 2000
+                    },
+                    {
+                        "id": 67890,
+                        "type": 0,
+                        "name": "Game B (Full Price)",
+                        "discounted": false,
+                        "discount_percent": 0,
+                        "original_price": 6000,
+                        "final_price": 6000
+                    }
+                ]
+            },
+            {
+                "name": "Top Sellers",
+                "items": [
+                    {
+                        "id": 11223,
+                        "type": 0,
+                        "name": "Game C",
+                        "discounted": true,
+                        "discount_percent": 10,
+                        "original_price": 1000,
+                        "final_price": 900
+                    }
+                ]
+            }
+        ]
+    }
+}
