@@ -1,51 +1,56 @@
-import os
+import logging
 import json
 import datetime as dt
-import azure.functions as func
 from pathlib import Path
-from dotenv import load_dotenv
-import requests
+import azure.functions as func
+import sys
 
-load_dotenv(dotenv_path=Path("config/dev/.env"))
+# CRÍTICO: Configuração do PATH
+root = Path(__file__).resolve().parents[2]
+sys.path.append(str(root))
 
-def _now_iso():
-    return dt.datetime.now(dt.timezone.utc).isoformat()
+# Importa o cliente real. SE FALHAR, É ERRO DE PATH OU DEPENDÊNCIA.
+# Não há mais DummyClient aqui.
+from src.collectors.steam import client as steam_client 
 
-def _capture_steam_featured():
-    base = os.getenv("STEAM_API_BASE", "https://store.steampowered.com")
-    url = f"{base}/api/featuredcategories"
-    headers = {"User-Agent": "steam-data-pipeline/1.0"}
-    r = requests.get(url, timeout=30, headers=headers)
-    r.raise_for_status()
-    payload = r.json()
-    return {
-        "source": "steam",
-        "endpoint": "featuredcategories",
-        "captured_at": _now_iso(),
-        "data": payload
-    }
 
-def main(timer: func.TimerRequest) -> None:
-    # Decide alvos de captura
-    targets = os.getenv("CAPTURE_TARGETS", "steam").split(",")
+def _bronze_dir():
+    # Define o diretório de saída para o Bronze
+    return Path(__file__).resolve().parents[2] / "src" / "processing" / "bronze"
 
-    results = []
-    if "steam" in [t.strip() for t in targets]:
-        try:
-            results.append(_capture_steam_featured())
-        except Exception as e:
-            results.append({
-                "source": "steam",
-                "error": str(e),
-                "captured_at": _now_iso()
-            })
 
-    # Persistência inicial em arquivo local (bronze/raw local)
-    #out_dir = Path("src/processing/bronze")
-    out_dir = Path(__file__).resolve().parents[2] / "src" / "processing" / "bronze"
+def _save_bronze(data):
+    # Salva o dicionário de dados da API na camada Bronze
+    out_dir = _bronze_dir()
     out_dir.mkdir(parents=True, exist_ok=True)
-    outfile = out_dir / f"raw_{dt.datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    ts = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
+    outfile = out_dir / f"raw_featured_{ts}.json"
+    
+    # SALVA O DICIONÁRIO COMPLETO DA RESPOSTA DA API
     with outfile.open("w", encoding="utf-8") as f:
-        json.dump({"items": results}, f, ensure_ascii=False, indent=2)
+        json.dump(data, f, ensure_ascii=False, indent=2)
+        
+    logging.info(f"[capture_daily] Dados salvos em: {outfile}")
+    return outfile
 
-    print(f"[capture_daily] wrote {outfile}")
+
+# FUNÇÃO PRINCIPAL: Usa 'timer'
+def main(timer: func.TimerRequest) -> None:
+    logging.info('Python timer trigger function capture_daily started at %s', dt.datetime.utcnow().isoformat())
+    
+    try:
+        # 1. Coleta dos dados (Chamará a API real via api.py)
+        featured_data = steam_client.get_featured_games()
+        
+        if not featured_data or not isinstance(featured_data, dict):
+            logging.warning("[capture_daily] Coleta de dados falhou ou não retornou um dicionário. Pulando o salvamento.")
+            return
+
+        # 2. Salva na camada Bronze
+        _save_bronze(featured_data)
+        
+        logging.info("[capture_daily] Coleta de dados Bronze finalizada.")
+        
+    except Exception as e:
+        # Se falhar aqui, o erro é REAL: HTTP, rede, ou falta de dependências (requests)
+        logging.error(f"[capture_daily] ERRO FATAL DE CONEXÃO/EXECUÇÃO DA API: {e}")
