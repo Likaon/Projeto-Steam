@@ -1,23 +1,22 @@
-# src/collectors/steam/parser.py
-
 def normalize_featured(payload: dict) -> dict:
-    """
-    Recebe o JSON bruto do endpoint featuredcategories e retorna uma versão
-    normalizada. Por enquanto, devolve o payload original.
-    """
     return payload
 
 def parse_featured(data: dict) -> dict:
     """
-    Normaliza o payload de 'featuredcategories' da Steam.
-    Ajuste conforme a estrutura real do JSON.
+    Extrai o dicionário de cada categoria que contém a lista de 'items' (jogos).
+    A estrutura da API é {category: {id: X, name: Y, items: [...]}}.
     """
-    # Exemplo simples: pega só os nomes das categorias
-    categories = []
-    for cat in data.get("featured_categories", []):
-        categories.append({
-            "id": cat.get("id"),
-            "name": cat.get("name"),
-            "items": cat.get("items", [])
-        })
-    return {"categories": categories}
+    normalized_categories = {}
+    
+    for category_key, category_data in data.items():
+        # Verifica se o valor é um dicionário e contém a chave 'items'
+        if isinstance(category_data, dict) and 'items' in category_data:
+            items_list = category_data['items']
+            
+            # Verifica se 'items' é uma lista com pelo menos um item (opcional, mas bom)
+            if isinstance(items_list, list):
+                 
+                # Retorna o dicionário da categoria
+                normalized_categories[category_key] = category_data
+                
+    return normalized_categories
