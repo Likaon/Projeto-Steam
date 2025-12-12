@@ -1,5 +1,43 @@
+# ------------------------------------
+# 1. AMBIENTES VIRTUAIS E DEPENDÊNCIAS
+# ------------------------------------
+# Ambientes virtuais (Seus .venv, venv, etc.)
 .venv/
+venv/
+env/
+
+# Pastas de bytecodes e pacotes temporários
 __pycache__/
-local.settings.json
-*.log
 .python_packages/
+
+# ------------------------------------
+# 2. CONFIGURAÇÕES LOCAIS E CHAVES
+# ------------------------------------
+# Contém chaves e segredos que NUNCA devem ir para o Git
+local.settings.json
+
+# ------------------------------------
+# 3. PASTAS DE DADOS DO PIPELINE (OUTPUTS)
+# ------------------------------------
+# CRÍTICO: Ignorar todos os outputs JSON salvos pelo pipeline.
+# Ignora todo o conteúdo da pasta de processamento (deve conter apenas JSONs e não código)
+src/processing/bronze/*
+src/processing/silver/*
+src/processing/gold/*
+
+# Pastas de output mencionadas na estrutura (Se existirem)
+gold_output/
+silver_output/
+
+# ------------------------------------
+# 4. Logs e Metadados do Sistema
+# ------------------------------------
+*.log
+.DS_Store # Mac
+Thumbs.db # Windows
+
+# -----------------------------------------
+# 5. Arquivos de testes de mudancas locais
+# ----------------------------------------- 
+funcional__init__.py
+steam_pipeline_functions_error
