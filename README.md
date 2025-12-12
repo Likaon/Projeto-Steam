@@ -4,7 +4,7 @@
 - [x] Estrutura inicial do repositório
 - [x] Coleta de dados brutos (Bronze)
 - [x] Processamento Silver  (Desenvolvimento/Testes)
-- [ ] Processamento Gold   (em analise dos processos e inicio de integração com ajuste da etapa silver )
+- [x] Processamento Gold   (em analise dos processos e inicio de integração com ajuste da etapa silver )
 - [ ] Ingestão em streaming no Storage Account
 - [ ] Parsing HTML com IA
 - [ ] Processamento Spark (Big Data)
@@ -51,17 +51,36 @@ func start --port 7072
 
 ```
 steam-data-pipeline/
-├── steam_pipeline_functions/
-│   └── capture_daily/
-│       └── __init__.py
+.
+├── .github/                        # Configurações de CI/CD (GitHub Actions)
+├── config/                         # Configurações globais e de ambiente
+├── infra/                          # Código IaC (Terraform/Bicep) para o deploy na nuvem
+├── scripts/                        # Scripts de utilidade e automação
+├── tests/                          # Testes de unidade e integração
+├── requirements.txt                # Dependências Python do projeto
+├── local.settings.json             # Configurações locais do Azure Functions
+|
 ├── src/
 │   ├── collectors/
 │   │   └── steam/
-│   │       ├── api.py
-│   │       ├── parser.py
-│   │       ├── schemas.py
-│   │       └── __init__.py
-│   └── processing/
-│       └── bronze/
-│           └── raw_*.json
+│   │       └── parser.py           # Módulo para desaninhamento e limpeza dos dados
+│   │
+│   └── processing/                 # Diretório de Armazenamento de Dados
+│       ├── bronze/                 # CAMADA RAW: Dados brutos, inalterados.
+│       ├── silver/                 # CAMADA LIMPA: Dados limpos, enriquecidos e tipados.
+│       └── gold/                   # CAMADA DE NEGÓCIO: Dados agregados e prontos para consumo.
+│
+└── steam_pipeline_functions/       # Diretório das Funções Azure
+    |
+    ├── capture_daily/              # Função 1: ETAPA BRONZE (Extração/Coleta)
+    │   ├── __init__.py             # Lógica Python de coleta da API
+    │   └── function.json           # Agendamento Timer Trigger (Ex: a cada 1h)
+    │
+    ├── process_silver/             # Função 2: ETAPA SILVER (Limpeza/Enriquecimento)
+    │   ├── __init__.py             # Lógica Python de Bronze -> Silver
+    │   └── function.json           # Agendamento Timer Trigger (Ex: a cada 5min)
+    │
+    └── process_gold/               # Função 3: ETAPA GOLD (Transformação/Agregação)
+        ├── __init__.py             # Lógica Python de Silver -> Gold (Seu código!)
+        └── function.json           # Agendamento Timer Trigger (Ex: a cada 10min)
 ```
